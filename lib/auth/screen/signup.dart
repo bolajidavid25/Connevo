@@ -1,0 +1,381 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connevo/auth/screen/user-login-screen.dart';
+import 'package:connevo/home_screen.dart';
+import '../services/auth_provider.dart';
+import '../services/auth_service.dart';
+
+class SignUpScreen extends ConsumerStatefulWidget {
+  const SignUpScreen({super.key});
+
+  @override
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends ConsumerState<SignUpScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero, () {
+      ref.read(authFormProvider.notifier).clear();
+    });
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.easeIn)),
+    );
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.easeOutCirc)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _signUpUser() async {
+    final formNotifier = ref.read(authFormProvider.notifier);
+    final authMethod = ref.read(authMethodProvider);
+    final formState = ref.read(authFormProvider);
+
+    formNotifier.setLoading(true);
+    final res = await authMethod.signUpUser(
+      email: formState.email,
+      password: formState.password,
+      name: formState.name,
+    );
+    
+    if (res != "Success") {
+      if (mounted) {
+        formNotifier.setLoading(false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res), 
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        // Success handled by AuthChecker
+      }
+    }
+  }
+
+  void _signUpWithGoogle() async {
+    final formNotifier = ref.read(authFormProvider.notifier);
+    final authMethod = ref.read(authMethodProvider);
+
+    formNotifier.setLoading(true);
+    final res = await authMethod.signInWithGoogle();
+    
+    if (res != "Success" && res != "Cancelled") {
+      if (mounted) {
+        formNotifier.setLoading(false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res), 
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        formNotifier.setLoading(false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = ref.watch(authFormProvider);
+    final formNotifier = ref.read(authFormProvider.notifier);
+    double height = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1A237E).withValues(alpha: 0.2),
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+        ),
+        title: const Text("Sign Up", style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+      ),
+      backgroundColor: Colors.grey[50],
+      body: Stack(
+        children: [
+          // Watermark Logo
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.05,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+                ),
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  height: height * 0.25,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    image: DecorationImage(
+                      image: AssetImage('assets/logo_join_animation.gif'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          const Text(
+                            "Create Account",
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1A237E),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          Text(
+                            "Join Connevo today",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+
+                          _buildTextField(
+                            hint: "Full Name",
+                            icon: Icons.person_outline_rounded,
+                            onChanged: (val) => formNotifier.updateName(val),
+                            errorText: formState.nameError,
+                          ),
+                          const SizedBox(height: 15),
+
+                          _buildTextField(
+                            hint: "Email Address",
+                            icon: Icons.alternate_email_rounded,
+                            onChanged: (val) => formNotifier.updateEmail(val),
+                            errorText: formState.emailError,
+                          ),
+                          const SizedBox(height: 15),
+
+                          _buildTextField(
+                            hint: "Password",
+                            icon: Icons.lock_open_rounded,
+                            isPassword: true,
+                            obscureText: formState.isPasswordHidden,
+                            onChanged: (val) => formNotifier.updatePassword(val),
+                            errorText: formState.passwordError,
+                            togglePassword: () => formNotifier.togglePasswordVisibility(),
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: ElevatedButton(
+                              onPressed: (formState.isLoading || !formState.isSignupValid) ? null : _signUpUser,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1A237E),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                elevation: 8,
+                                shadowColor: const Color(0xFF1A237E).withValues(alpha: 0.4),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: formState.isLoading
+                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  : const Text(
+                                      "GET STARTED",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Text("OR", style: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.bold)),
+                              ),
+                              Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: OutlinedButton(
+                              onPressed: formState.isLoading ? null : _signUpWithGoogle,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF1A237E), width: 1.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.network(
+                                    'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
+                                    height: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    "SIGN UP WITH GOOGLE",
+                                    style: TextStyle(
+                                      color: Color(0xFF1A237E),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 25),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("Already have an account? ", style: TextStyle(color: Colors.grey[700])),
+                              GestureDetector(
+                                onTap: () {
+                                  ref.read(authFormProvider.notifier).clear();
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const UserLoginScreen())
+                                  );
+                                },
+                                child: const Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    color: Color(0xFF1A237E),
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+    bool obscureText = false,
+    Function(String)? onChanged,
+    String? errorText,
+    VoidCallback? togglePassword,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+            border: Border.all(
+              color: errorText != null ? Colors.redAccent : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: TextField(
+            obscureText: obscureText,
+            onChanged: onChanged,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.w500),
+              prefixIcon: Icon(icon, color: const Color(0xFF1A237E)),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: Colors.grey[400],
+                      ),
+                      onPressed: togglePassword,
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 15, top: 8),
+            child: Text(
+              errorText,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+      ],
+    );
+  }
+}
