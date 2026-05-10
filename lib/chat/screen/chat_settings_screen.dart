@@ -100,7 +100,7 @@ class ChatSettingsScreen extends ConsumerWidget {
                       title: const Text("Mute Notifications", style: TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: const Text("Silence alerts for this specific chat"),
                       value: isMuted,
-                      activeColor: const Color(0xFF1A237E),
+                      activeThumbColor: const Color(0xFF1A237E),
                       onChanged: (bool value) {
                         ref.read(chatServiceProvider).toggleChatMute(chatId, value);
                       },

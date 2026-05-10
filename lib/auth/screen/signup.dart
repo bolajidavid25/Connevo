@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connevo/auth/screen/user-login-screen.dart';
-import 'package:connevo/home_screen.dart';
+import 'package:connevo/auth/screen/user_login_screen.dart';
 import '../services/auth_provider.dart';
 import '../services/auth_service.dart';
 

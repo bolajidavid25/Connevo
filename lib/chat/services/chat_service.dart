@@ -11,11 +11,11 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
-  final String _imgbbApiKey = "cee48d09a562140c7eb6c7d400d7d097";
+  final String _imgbbApiKey = ""; // Removed for security
 
   // CLOUDINARY CONFIG
-  final String _cloudinaryCloudName = "dbqwlnktj";
-  final String _cloudinaryUploadPreset = "fp4r6bsq";
+  final String _cloudinaryCloudName = ""; // Removed for security
+  final String _cloudinaryUploadPreset = ""; // Removed for security
 
   Stream<List<UserModel>> getAllUsers() {
     return _firestore.collection('users').limit(50).snapshots().map((snapshot) {
@@ -190,6 +190,26 @@ class ChatService {
     return _firestore.collection('chats').where('participants', arrayContains: uid)
         .orderBy('lastMessageTime', descending: true).limit(20).snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ChatRoomModel.fromMap(doc.data(), doc.id)).toList());
+  }
+
+  Future<void> logCall(CallLogModel log, String chatId) async {
+    await _firestore.collection('call_logs').add(log.toMap());
+
+    String message = log.isVideo ? "📹 Video Call" : "📞 Voice Call";
+    String durationText = log.duration > 0
+        ? " (${(log.duration / 60).floor()}:${(log.duration % 60).toString().padLeft(2, '0')})"
+        : " (No answer)";
+
+    await sendMessage(chatId, "$message$durationText", type: 'call_log');
+  }
+
+  Stream<List<CallLogModel>> getCallLogs() {
+    String? uid = _auth.currentUser?.uid;
+    if (uid == null) return Stream.value([]);
+    return _firestore.collection('call_logs')
+        .where(Filter.or(Filter('callerId', isEqualTo: uid), Filter('receiverId', isEqualTo: uid)))
+        .orderBy('timestamp', descending: true).limit(50).snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => CallLogModel.fromMap(doc.data(), doc.id)).toList());
   }
 }
 

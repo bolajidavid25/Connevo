@@ -69,7 +69,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       subtitle: const Text("Receive alerts for new messages"),
                       value: user.notificationsEnabled,
-                      activeColor: const Color(0xFF1A237E),
+                      activeThumbColor: const Color(0xFF1A237E),
                       onChanged: (bool value) {
                         authMethod.updateNotificationSetting(value);
                       },

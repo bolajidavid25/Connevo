@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -14,7 +13,7 @@ class AuthMethod {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final NotificationService _notificationService = NotificationService();
   
-  final String _imgbbApiKey = "cee48d09a562140c7eb6c7d400d7d097";
+  final String _imgbbApiKey = ""; // Removed for security
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: kIsWeb 

@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:connevo/chat/screen/chat_list_screen.dart';
+import 'package:connevo/chat/screen/call_history_screen.dart';
 import 'auth/services/auth_service.dart';
 import 'chat/services/chat_service.dart';
 
@@ -27,6 +27,8 @@ class HomeScreen extends ConsumerWidget {
 
       final res = await authMethod.uploadProfileImage(bytes);
       
+      if (!context.mounted) return;
+
       if (res == "Success") {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Success! Avatar updated."), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating),
@@ -60,6 +62,7 @@ class HomeScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A237E)),
             onPressed: () async {
               final res = await ref.read(authMethodProvider).updateName(nameController.text.trim());
+              if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -94,6 +97,15 @@ class HomeScreen extends ConsumerWidget {
         ),
         title: const Text("My Profile", style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CallHistoryScreen()),
+              );
+            },
+            icon: const Icon(Icons.history_rounded),
+          ),
           // Message Icon with Badge
           Stack(
             alignment: Alignment.center,
@@ -128,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
                     )
                   : const SizedBox.shrink(),
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, stack) => const SizedBox.shrink(),
               ),
             ],
           ),

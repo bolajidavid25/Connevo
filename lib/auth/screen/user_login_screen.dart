@@ -112,16 +112,15 @@ class _UserLoginScreenState extends ConsumerState<UserLoginScreen> with SingleTi
             onPressed: () async {
               final authMethod = ref.read(authMethodProvider);
               final res = await authMethod.resetPassword(email: emailController.text.trim());
-              if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(res == "Success" ? "Password reset link sent to your email" : res),
-                    backgroundColor: res == "Success" ? Colors.green : Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(res == "Success" ? "Password reset link sent to your email" : res),
+                  backgroundColor: res == "Success" ? Colors.green : Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             child: const Text("Send Link", style: TextStyle(color: Colors.white)),
           ),
@@ -140,7 +139,7 @@ class _UserLoginScreenState extends ConsumerState<UserLoginScreen> with SingleTi
       email: formState.email,
       password: formState.password,
     );
-    
+
     if (res != "Success") {
       if (mounted) {
         formNotifier.setLoading(false);
@@ -149,7 +148,7 @@ class _UserLoginScreenState extends ConsumerState<UserLoginScreen> with SingleTi
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(res), 
+              content: Text(res),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:connevo/chat/screen/contact_info_screen.dart';
+import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:connevo/auth/services/auth_service.dart';
 import '../model/chat_model.dart';
@@ -119,24 +120,71 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     }
   }
 
-  void _onCallPressed({required bool isVideo}) {
+  void _onCallPressed({required bool isVideo}) async {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
-    final currentUserName = ref.read(userProvider).value?.name ?? "User";
+    final currentUserData = ref.read(userProvider).value;
+    final currentUserName = currentUserData?.name ?? "User";
 
     if (widget.otherUserId == null) return;
+
+    DateTime? startTime;
+
+    // Listen for the other user joining to start the timer (Strict 4.x compatibility)
+    final subscription = ZegoUIKit().getUserJoinStream().listen((List<ZegoUIKitUser> users) {
+      for (var user in users) {
+        if (user.id == widget.otherUserId) {
+          startTime = DateTime.now();
+        }
+      }
+    });
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ZegoUIKitPrebuiltCall(
-          appID: 1477594597,
-          appSign: '566fb89a65a8ba359a03ea7fda175bc83a6e8cbcff5eb0d967c10623a009a5a9',
+          appID: 0, // Removed for security
+          appSign: '', // Removed for security
           userID: currentUserId,
           userName: currentUserName,
           callID: widget.chatId,
-          config: isVideo
+          config: (isVideo
               ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
-              : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall(),
+              : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall())
+            ..avatarBuilder = (context, size, user, extraInfo) {
+              return CircleAvatar(
+                backgroundImage: widget.otherUserPic != null ? NetworkImage(widget.otherUserPic!) : null,
+                child: widget.otherUserPic == null ? Text(widget.otherUserName[0]) : null,
+              );
+            },
+          events: ZegoUIKitPrebuiltCallEvents(
+            onCallEnd: (ZegoCallEndEvent event, defaultAction) async {
+              subscription.cancel(); // Clean up listener
+
+              // Perform the default hangup action (popping the screen) first
+              defaultAction.call();
+
+              int duration = 0;
+              if (startTime != null) {
+                duration = DateTime.now().difference(startTime!).inSeconds;
+              }
+
+              final log = CallLogModel(
+                callId: widget.chatId,
+                callerId: currentUserId,
+                receiverId: widget.otherUserId!,
+                callerName: currentUserName,
+                receiverName: widget.otherUserName,
+                callerPic: currentUserData?.profilePic,
+                receiverPic: widget.otherUserPic,
+                timestamp: DateTime.now(),
+                isVideo: isVideo,
+                duration: duration,
+              );
+
+              // Log the call in the background without blocking the UI
+              ref.read(chatServiceProvider).logCall(log, widget.chatId);
+            },
+          ),
         ),
       ),
     );
@@ -303,6 +351,27 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
                                           if (message.type == 'text' && message.text.isNotEmpty)
                                             Text(message.text, style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 15)),
+
+                                          if (message.type == 'call_log')
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  message.text.contains("Video") ? Icons.videocam_rounded : Icons.call_rounded,
+                                                  size: 16,
+                                                  color: isMe ? Colors.white70 : const Color(0xFF1A237E),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  message.text,
+                                                  style: TextStyle(
+                                                    color: isMe ? Colors.white : Colors.black87,
+                                                    fontSize: 14,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
 
                                           const SizedBox(height: 4),
                                           Text(DateFormat('HH:mm').format(message.timestamp), style: TextStyle(color: isMe ? Colors.white70 : Colors.grey[400], fontSize: 9)),

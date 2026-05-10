@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCQ8fi0QvIzyGwlDEUGeQ3ept-iewSuCBE',
+    apiKey: '',
     appId: '1:420624463594:web:ab28a00054dcee10710993',
     messagingSenderId: '420624463594',
     projectId: 'connevo',
@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDYVU_1ZrUfO5Qzd1NTNnE17NIdaQylHNE',
+    apiKey: '',
     appId: '1:420624463594:android:cc46e58f3b48348d710993',
     messagingSenderId: '420624463594',
     projectId: 'connevo',
@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDAUoCtyRF-ybicbCIm-HXPd1E2IxGl1lc',
+    apiKey: '',
     appId: '1:420624463594:ios:68a130566569710b710993',
     messagingSenderId: '420624463594',
     projectId: 'connevo',
@@ -70,7 +70,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDAUoCtyRF-ybicbCIm-HXPd1E2IxGl1lc',
+    apiKey: '',
     appId: '1:420624463594:ios:68a130566569710b710993',
     messagingSenderId: '420624463594',
     projectId: 'connevo',
@@ -81,7 +81,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCQ8fi0QvIzyGwlDEUGeQ3ept-iewSuCBE',
+    apiKey: '',
     appId: '1:420624463594:web:8743cfeb3a4a0a6f710993',
     messagingSenderId: '420624463594',
     projectId: 'connevo',

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.untitled"
+    namespace = "com.bolajidavid.connevo"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.untitled"
+        applicationId = "com.bolajidavid.connevo"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
