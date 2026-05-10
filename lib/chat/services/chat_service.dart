@@ -11,7 +11,7 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
-  final String _imgbbApiKey = ""; // Removed for security
+  final String _imgbbApiKey = "61ea607e250048756e170b7db4a946ad";
 
   // CLOUDINARY CONFIG
   final String _cloudinaryCloudName = ""; // Removed for security

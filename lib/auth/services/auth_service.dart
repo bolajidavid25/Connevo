@@ -13,7 +13,7 @@ class AuthMethod {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final NotificationService _notificationService = NotificationService();
   
-  final String _imgbbApiKey = ""; // Removed for security
+  final String _imgbbApiKey = "61ea607e250048756e170b7db4a946ad";
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: kIsWeb 
