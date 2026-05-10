@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -14,8 +15,9 @@ class ChatService {
   final String _imgbbApiKey = "61ea607e250048756e170b7db4a946ad";
 
   // CLOUDINARY CONFIG
-  final String _cloudinaryCloudName = ""; // Removed for security
-  final String _cloudinaryUploadPreset = ""; // Removed for security
+  final String _cloudinaryCloudName = "dbqwlnktj"; // Existing cloud name
+  final String _cloudinaryApiKey = "418667727969827";
+  final String _cloudinaryApiSecret = "U60JEbGzyIWdWOem9AHc1bD5Ahs";
 
   Stream<List<UserModel>> getAllUsers() {
     return _firestore.collection('users').limit(50).snapshots().map((snapshot) {
@@ -156,9 +158,15 @@ class ChatService {
 
   Future<String?> uploadChatDocument(Uint8List file, String fileName, String chatId) async {
     try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final signatureData = "timestamp=$timestamp$_cloudinaryApiSecret";
+      final signature = sha1.convert(utf8.encode(signatureData)).toString();
+
       final url = Uri.parse("https://api.cloudinary.com/v1_1/$_cloudinaryCloudName/raw/upload");
       var request = http.MultipartRequest('POST', url);
-      request.fields['upload_preset'] = _cloudinaryUploadPreset;
+      request.fields['timestamp'] = timestamp.toString();
+      request.fields['api_key'] = _cloudinaryApiKey;
+      request.fields['signature'] = signature;
       request.files.add(http.MultipartFile.fromBytes('file', file, filename: fileName));
       var res = await request.send().timeout(const Duration(seconds: 60));
       var resData = await http.Response.fromStream(res);
